@@ -55,8 +55,43 @@ const updateEtapa = async (req = request, res = response) => {
     }
 };
 
+const getEtapaById = async (req = request, res = response) => {
+    try {
+        const { id } = req.params;
+        const etapa = await Etapa.findById(id);
+
+        if (!etapa) {
+            return res.status(404).json({ msg: 'Etapa no encontrada' });
+        }
+
+        res.json(etapa);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: 'Error al obtener etapa' });
+    }
+};
+
+const deleteEtapa = async (req = request, res = response) => {
+    try {
+        const { id } = req.params;
+
+        const etapa = await Etapa.findByIdAndDelete(id);
+
+        if (!etapa) {
+            return res.status(404).json({ msg: 'Etapa no encontrada' });
+        }
+
+        res.json({ msg: 'Etapa eliminada', etapa });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: 'Error al eliminar etapa' });
+    }
+};
+
 module.exports = {
     getEtapas,
     createEtapa,
-    updateEtapa
+    updateEtapa,
+    getEtapaById,
+    deleteEtapa
 };

@@ -47,8 +47,43 @@ const updateUniversidad = async (req = request, res = response) => {
     }
 };
 
+const getUniversidadById = async (req = request, res = response) => {
+    try {
+        const { id } = req.params;
+        const universidad = await Universidad.findById(id);
+
+        if (!universidad) {
+            return res.status(404).json({ msg: 'Universidad no encontrada' });
+        }
+
+        res.json(universidad);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: 'Error al obtener universidad' });
+    }
+};
+
+const deleteUniversidad = async (req = request, res = response) => {
+    try {
+        const { id } = req.params;
+
+        const universidad = await Universidad.findByIdAndDelete(id);
+
+        if (!universidad) {
+            return res.status(404).json({ msg: 'Universidad no encontrada' });
+        }
+
+        res.json({ msg: 'Universidad eliminada', universidad });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: 'Error al eliminar universidad' });
+    }
+};
+
 module.exports = {
     getUniversidades,
     createUniversidad,
-    updateUniversidad
+    updateUniversidad,
+    getUniversidadById,
+    deleteUniversidad
 };

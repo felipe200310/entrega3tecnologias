@@ -55,8 +55,43 @@ const updateCliente = async (req = request, res = response) => {
     }
 };
 
+const getClienteById = async (req = request, res = response) => {
+    try {
+        const { id } = req.params;
+        const cliente = await Cliente.findById(id);
+
+        if (!cliente) {
+            return res.status(404).json({ msg: 'Cliente no encontrado' });
+        }
+
+        res.json(cliente);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: 'Error al obtener cliente' });
+    }
+};
+
+const deleteCliente = async (req = request, res = response) => {
+    try {
+        const { id } = req.params;
+
+        const cliente = await Cliente.findByIdAndDelete(id);
+
+        if (!cliente) {
+            return res.status(404).json({ msg: 'Cliente no encontrado' });
+        }
+
+        res.json({ msg: 'Cliente eliminado', cliente });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: 'Error al eliminar cliente' });
+    }
+};
+
 module.exports = {
     getClientes,
     createCliente,
-    updateCliente
+    updateCliente,
+    getClienteById,
+    deleteCliente
 };

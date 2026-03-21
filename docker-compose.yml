@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  api-monolito:
+    build: .
+    image: felipe1082/api-core:v1.0
+    container_name: api-monolito
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  microservicio-proyectos:
+    build: ./microservicio-proyectos
+    image: felipe1082/api-proyectos:v1.0
+    # NO declaramos 'container_name' ni 'ports' mapeados al Host 
+    # para evitar choques al hacer escalamiento horizontal (réplicas).
+    expose:
+      - "4001"
+    env_file:
+      - ./microservicio-proyectos/.env
+    restart: unless-stopped
+    deploy:
+      replicas: 3 # Escalamiento horizontal: 3 contenedores separados
+
+  balanceador-nginx:
+    image: nginx:alpine
+    container_name: balanceador-nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "4001:4001" # El balanceador es el que expone el puerto al público
+    depends_on:
+      - microservicio-proyectos
+    restart: unless-stopped

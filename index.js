@@ -8,7 +8,6 @@ const tipoProyectoRoutes = require('./routes/tipoProyecto');
 const clienteRoutes = require('./routes/cliente');
 const universidadRoutes = require('./routes/universidad');
 const etapaRoutes = require('./routes/etapa');
-const proyectoRoutes = require('./routes/proyecto');
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -22,7 +21,6 @@ app.use('/api/tipos-proyecto', tipoProyectoRoutes);
 app.use('/api/clientes', clienteRoutes);
 app.use('/api/universidades', universidadRoutes);
 app.use('/api/etapas', etapaRoutes);
-app.use('/api/proyectos', proyectoRoutes);
 
 app.get('/', (req, res) => {
     res.json({

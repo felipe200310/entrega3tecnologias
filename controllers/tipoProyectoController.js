@@ -55,8 +55,43 @@ const updateTipoProyecto = async (req = request, res = response) => {
     }
 };
 
+const getTipoProyectoById = async (req = request, res = response) => {
+    try {
+        const { id } = req.params;
+        const tipo = await TipoProyecto.findById(id);
+
+        if (!tipo) {
+            return res.status(404).json({ msg: 'Tipo de proyecto no encontrado' });
+        }
+
+        res.json(tipo);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: 'Error al obtener tipo de proyecto' });
+    }
+};
+
+const deleteTipoProyecto = async (req = request, res = response) => {
+    try {
+        const { id } = req.params;
+
+        const tipo = await TipoProyecto.findByIdAndDelete(id);
+
+        if (!tipo) {
+            return res.status(404).json({ msg: 'Tipo de proyecto no encontrado' });
+        }
+
+        res.json({ msg: 'Tipo de proyecto eliminado', tipo });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: 'Error al eliminar tipo de proyecto' });
+    }
+};
+
 module.exports = {
     getTiposProyecto,
     createTipoProyecto,
-    updateTipoProyecto
+    updateTipoProyecto,
+    getTipoProyectoById,
+    deleteTipoProyecto
 };

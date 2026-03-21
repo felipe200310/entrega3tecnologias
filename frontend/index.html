@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador API - Asesorías</title>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bg: #F3F4F6;
+            --surface: #FFFFFF;
+            --text: #1F2937;
+            --text-light: #6B7280;
+            --border: #E5E7EB;
+            --success: #10B981;
+            --danger: #EF4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background-color: #DC2626;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+
+        .panel h2 {
+            margin-bottom: 1.5rem;
+            color: var(--text);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .data-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .card {
+            background: var(--bg);
+            padding: 1.25rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .card h3 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .card p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-actions {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+        }
+
+        .status {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            display: none;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .status.success {
+            display: block;
+            background-color: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #10B981;
+        }
+
+        .status.error {
+            display: block;
+            background-color: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #EF4444;
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: var(--primary);
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Visualizador de Datos API</h1>
+            <p>Conectado a MongoDB Atlas (API en http://localhost:4000)</p>
+        </header>
+
+        <div class="controls">
+            <button onclick="cargarDatos('clientes')">👥 Ver Clientes</button>
+            <button onclick="cargarDatos('etapas')">📑 Ver Etapas</button>
+            <button onclick="cargarDatos('tipos-proyecto')">🗂️ Ver Tipos Proyecto</button>
+            <button onclick="cargarDatos('universidades')">🏫 Ver Universidades</button>
+            <button onclick="cargarDatos('proyectos')" style="background-color: #8B5CF6;">🚀 Ver Proyectos
+                Rápidos</button>
+        </div>
+
+        <div id="statusMessage" class="status"></div>
+
+        <div class="dashboard">
+            <!-- Formulario de Creación -->
+            <div class="panel">
+                <h2 id="formTitle">Crear Cliente</h2>
+                <form id="crearForm" onsubmit="crearRegistro(event)">
+                    <!-- Los campos se generan dinámicamente según lo seleccionado -->
+                    <div id="formFields">
+                        <div class="form-group">
+                            <label>Nombre</label>
+                            <input type="text" id="inputNombre" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="inputEmail" required>
+                        </div>
+                    </div>
+                    <button type="submit" style="width: 100%; margin-top: 1rem;">Guardar en Mongo</button>
+                </form>
+            </div>
+
+            <!-- Visualización de Datos -->
+            <div class="panel">
+                <h2>Registros Actuales <span id="badgeCount"
+                        style="background:var(--primary);color:white;padding:2px 8px;border-radius:12px;font-size:0.9rem;">0</span>
+                </h2>
+                <div id="loader" class="loader">Cargando datos desde MongoDB... ⏳</div>
+                <div id="dataContainer" class="data-grid">
+                    <!-- Las tarjetas caerán aquí -->
+                    <p style="text-align:center; color: var(--text-light); margin-top: 2rem;">Selecciona una opción
+                        arriba para empezar</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:4000/api';
+        let entidadActual = 'clientes'; // por defecto
+
+        // Opciones por entidad para dibujar los formularios dinámicos
+        const schemas = {
+            'clientes': [
+                { id: 'nombre', label: 'Nombre', type: 'text' },
+                { id: 'email', label: 'Email', type: 'email' }
+            ],
+            'etapas': [
+                { id: 'nombre', label: 'Nombre de la Etapa', type: 'text' }
+            ],
+            'tipos-proyecto': [
+                { id: 'nombre', label: 'Tipo de Proyecto', type: 'text' }
+            ],
+            'universidades': [
+                { id: 'nombre', label: 'Nombre Universidad', type: 'text' },
+                { id: 'direccion', label: 'Dirección', type: 'text' },
+                { id: 'telefono', label: 'Teléfono', type: 'text' }
+            ]
+        };
+
+        // --- Funciones de Utilidad ---
+        function mostrarMensaje(texto, tipo = 'success') {
+            const status = document.getElementById('statusMessage');
+            status.textContent = texto;
+            status.style.display = ''; // Resetear el display inline oculto
+            status.className = `status ${tipo}`;
+            setTimeout(() => { status.className = 'status'; }, 4000);
+        }
+
+        // --- Leer (GET) ---
+        async function cargarDatos(entidad) {
+            entidadActual = entidad;
+            document.getElementById('formTitle').textContent = `Crear ${entidad.replace('-', ' ')}`;
+
+            // --- AJUSTE DINÁMICO DE PUERTO ---
+            // Si es proyectos, consultamos al Balanceador (4001), sino al Monolito (4000)
+            const BASE_URL = entidad === 'proyectos' ? 'http://localhost:4001/api' : 'http://localhost:4000/api';
+
+            // Si no son proyectos (que son complejos), dibujamos sus forms
+            if (entidad !== 'proyectos') {
+                dibujarFormulario(entidad);
+            } else {
+                document.getElementById('formFields').innerHTML = '<p>La creación de proyectos por interfaz es muy larga por las relaciones, prueba los GET en su lugar :)</p>';
+            }
+
+            const container = document.getElementById('dataContainer');
+            const loader = document.getElementById('loader');
+
+            container.innerHTML = '';
+            loader.style.display = 'block';
+
+            try {
+                const response = await fetch(`${BASE_URL}/${entidad}`);
+                const data = await response.json();
+
+                document.getElementById('badgeCount').textContent = data.length || 0;
+                loader.style.display = 'none';
+
+                if (data.length === 0) {
+                    container.innerHTML = '<p style="text-align:center;">No hay registros en la base de datos.</p>';
+                    return;
+                }
+
+                data.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+
+                    let html = `<h3>🌟 ${item.nombre || item.titulo || 'Registro'}</h3>`;
+
+                    // Mostrando propiedades dinámicamente
+                    for (const key in item) {
+                        if (['_id', '__v', 'nombre', 'titulo', 'fechaCreacion', 'fechaActualizacion'].includes(key)) continue;
+
+                        // Si es un objeto (como cuando damos populate en proyecto)
+                        if (typeof item[key] === 'object' && item[key] !== null) {
+                            html += `<p><strong>${key}:</strong> ${item[key].nombre || item[key]._id}</p>`;
+                        } else {
+                            html += `<p><strong>${key}:</strong> ${item[key]}</p>`;
+                        }
+                    }
+
+                    html += `<p style="font-size:0.8rem; margin-top:8px; display:block">ID Mongo: <code>${item._id}</code></p>`;
+
+                    html += `
+                        <div class="card-actions">
+                            <button class="btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem" onclick="eliminarRegistro('${item._id}')">🗑️ Borrar</button>
+                        </div>
+                    `;
+
+                    card.innerHTML = html;
+                    container.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error(error);
+                loader.style.display = 'none';
+                mostrarMensaje('Error al conectar con la API central. ¿Está encendido el servidor Node?', 'error');
+            }
+        }
+
+        // --- Dibujar Formulario ---
+        function dibujarFormulario(entidad) {
+            const fieldsContainer = document.getElementById('formFields');
+            fieldsContainer.innerHTML = '';
+
+            const campos = schemas[entidad];
+            if (!campos) return;
+
+            campos.forEach(campo => {
+                fieldsContainer.innerHTML += `
+                    <div class="form-group">
+                        <label>${campo.label}</label>
+                        <input type="${campo.type}" id="input_${campo.id}" required>
+                    </div>
+                `;
+            });
+        }
+
+        // --- Crear (POST) ---
+        async function crearRegistro(e) {
+            e.preventDefault();
+
+            if (entidadActual === 'proyectos') {
+                mostrarMensaje('Agrega los IDs de Mongo requeridos por consola', 'error');
+                return;
+            }
+
+            const campos = schemas[entidadActual];
+            const bodyData = {};
+
+            campos.forEach(campo => {
+                const valor = document.getElementById(`input_${campo.id}`).value;
+                bodyData[campo.id] = valor;
+            });
+
+            const BASE_URL = entidadActual === 'proyectos' ? 'http://localhost:4001/api' : 'http://localhost:4000/api';
+
+            try {
+                const response = await fetch(`${BASE_URL}/${entidadActual}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bodyData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    mostrarMensaje(`¡Registro guardado en Mongo Atlas! ID: ${data._id}`);
+                    cargarDatos(entidadActual); // Refrescar lista
+                } else {
+                    mostrarMensaje(data.msg || 'Error al guardar', 'error');
+                }
+            } catch (error) {
+                mostrarMensaje('Error de conexión a la API', 'error');
+            }
+        }
+
+        // --- Eliminar (DELETE) ---
+        async function eliminarRegistro(id) {
+            if (!confirm('¿Seguro que quieres borrar este registro permanentemente de tu Base de Datos?')) return;
+
+            const BASE_URL = entidadActual === 'proyectos' ? 'http://localhost:4001/api' : 'http://localhost:4000/api';
+
+            try {
+                const response = await fetch(`${BASE_URL}/${entidadActual}/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    mostrarMensaje('¡Eliminado exitosamente!');
+                    cargarDatos(entidadActual); // Refrescar lista
+                } else {
+                    const data = await response.json();
+                    mostrarMensaje(data.msg || 'Error al borrar', 'error');
+                }
+            } catch (error) {
+                mostrarMensaje('Error de conexión a la API', 'error');
+            }
+        }
+
+        // Iniciar probando con Clientes
+        window.onload = () => cargarDatos('clientes');
+    </script>
+</body>
+
+</html>
