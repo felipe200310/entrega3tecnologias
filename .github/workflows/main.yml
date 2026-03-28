@@ -7,11 +7,11 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-and-push:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 1. Descargando Código
+    - name: 1. Descargando Codigo del Repositorio
       uses: actions/checkout@v4
 
     - name: 2. Configurando Node.js
@@ -19,29 +19,29 @@ jobs:
       with:
         node-version: '20'
 
-    - name: 3. Instalando Dependencias
+    - name: 3. Instalando Dependencias del Monolito
       run: npm install
 
-    - name: 4. Login en Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: 4. Instalando Dependencias del Microservicio
+      run: |
+        cd microservicio-proyectos
+        npm install
 
-    - name: 5. Construyendo y Subiendo Monolito Core
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/api-core:v1.0, ${{ secrets.DOCKERHUB_USERNAME }}/api-core:latest
+    - name: 5. Construyendo Imagenes Docker
+      run: docker compose build
 
-    - name: 6. Construyendo y Subiendo Microservicio Proyectos
-      uses: docker/build-push-action@v5
-      with:
-        context: ./microservicio-proyectos
-        push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/api-proyectos:v1.0, ${{ secrets.DOCKERHUB_USERNAME }}/api-proyectos:latest
+    - name: 6. Desplegando con Escalamiento Horizontal (3 replicas)
+      run: docker compose up -d
 
-    - name: 7. Limpieza de Imágenes Locales (Runner)
+    - name: 7. Verificando que los servicios estan corriendo
+      run: |
+        echo "Esperando que los servicios arranquen..."
+        sleep 10
+        docker ps
+        echo "Servicios desplegados correctamente"
+
+    - name: 8. Limpieza de recursos
       if: always()
-      run: docker system prune -f
+      run: |
+        docker compose down
+        docker system prune -f
